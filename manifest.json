@@ -1,6 +1,6 @@
 {
-  "name": "Toyota Fleet Vicuña",
-  "short_name": "FleetVicuña",
+  "name": "Flota Vicuña",
+  "short_name": "FlotaVicuña",
   "description": "Gestor de turnos de mantenimiento Toyota Hilux — Proyecto Vicuña",
   "start_url": "/index.html",
   "scope": "/",
