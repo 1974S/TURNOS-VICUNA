@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#CC0000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ToyotaFleet">
+<meta name="description" content="Gestor de mantenimiento Toyota Hilux — Proyecto Vicuña">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Toyota Fleet — Vicuña</title>
+<style>
+/* ─── VARIABLES ───────────────────────────── */
+:root {
+  --red:     #CC0000;
+  --red-d:   #A80000;
+  --red-l:   #FF1A1A;
+  --bg:      #F2F2F7;
+  --card:    #FFFFFF;
+  --border:  #E5E5EA;
+  --text:    #1C1C1E;
+  --text2:   #636366;
+  --text3:   #AEAEB2;
+  --safe-t:  env(safe-area-inset-top, 0px);
+  --safe-b:  env(safe-area-inset-bottom, 0px);
+  --radius:  14px;
+  --radius-s:10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:    #000000;
+    --card:  #1C1C1E;
+    --border:#38383A;
+    --text:  #FFFFFF;
+    --text2: #AEAEB2;
+    --text3: #636366;
+  }
+}
+
+/* ─── RESET ───────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box; margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.4;
+  overscroll-behavior: none;
+}
+
+/* ─── APP SHELL ───────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  height: -webkit-fill-available;
+}
+
+/* ─── STATUS BAR SPACER ───────────────────── */
+.status-bar {
+  height: var(--safe-t);
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+/* ─── NAV BAR ─────────────────────────────── */
+.navbar {
+  background: var(--red);
+  padding: 0 16px 12px;
+  flex-shrink: 0;
+}
+.navbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  margin-bottom: 2px;
+}
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand-icon {
+  width: 32px; height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.brand-text { color: white; }
+.brand-title { font-size: 17px; font-weight: 700; line-height: 1.1; }
+.brand-sub   { font-size: 11px; opacity: 0.75; }
+.btn-add-nav {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+}
+.btn-add-nav:active { background: rgba(255,255,255,0.35); transform: scale(0.92); }
+
+/* ─── TAB BAR (top) ───────────────────────── */
+.tabbar {
+  display: flex;
+  background: var(--red);
+  padding: 0 4px;
+  gap: 2px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.65);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+.tab-btn.active {
+  color: white;
+  border-bottom-color: white;
+  font-weight: 700;
+}
+.tab-btn:active { opacity: 0.7; }
+
+/* ─── CONTENT AREA ────────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 12px 14px calc(16px + var(--safe-b));
+}
+
+/* ─── SEARCH BAR ──────────────────────────── */
+.searchbar {
+  background: var(--card);
+  border-radius: var(--radius-s);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.searchbar-icon { color: var(--text3); font-size: 16px; flex-shrink: 0; }
+.searchbar input {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+.searchbar input::placeholder { color: var(--text3); }
+
+/* ─── KPI STRIP ───────────────────────────── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.kpi-card {
+  background: var(--card);
+  border-radius: var(--radius-s);
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.kpi-num  { font-size: 22px; font-weight: 800; line-height: 1; }
+.kpi-lbl  { font-size: 9.5px; color: var(--text3); margin-top: 2px; font-weight: 500; }
+.kpi-blue   .kpi-num { color: #007AFF; }
+.kpi-green  .kpi-num { color: #34C759; }
+.kpi-orange .kpi-num { color: #FF9500; }
+.kpi-red    .kpi-num { color: #FF3B30; }
+
+/* ─── SECTION HEADER ──────────────────────── */
+.sec-hdr {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 16px 0 8px 2px;
+}
+.sec-hdr:first-of-type { margin-top: 0; }
+
+/* ─── EVENT CARD ──────────────────────────── */
+.ev-list { display: flex; flex-direction: column; gap: 8px; }
+.ev-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+.ev-card:active { opacity: 0.7; transform: scale(0.99); }
+.ev-stripe { width: 4px; flex-shrink: 0; }
+.ev-body { flex: 1; padding: 12px 12px 12px 10px; }
+.ev-row1 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.ev-dom    { font-size: 17px; font-weight: 700; }
+.ev-int    { font-size: 12px; color: var(--text3); font-weight: 400; }
+.ev-date   { font-size: 12px; color: var(--text3); white-space: nowrap; margin-top: 2px; }
+.ev-row2   { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ev-area   { font-size: 12px; color: var(--text2); }
+.ev-obs    { font-size: 12px; color: var(--text3); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ─── BADGES ──────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.pm1 { background: #E3F0FF; color: #0066CC; }
+.pm2 { background: #E3F9E9; color: #1A7F3C; }
+.pm3 { background: #FFF5E0; color: #B86800; }
+.pm4 { background: #FFE5E5; color: #CC0000; }
+.pm5 { background: #EFE9FD; color: #5E35B1; }
+.pm6 { background: #E0F7F0; color: #00796B; }
+.pm7 { background: #FFF0E3; color: #B84800; }
+.pm8 { background: #FCE8F3; color: #AD1457; }
+.st-ok   { background: #E3F9E9; color: #1A7F3C; }
+.st-prox { background: #FFF5E0; color: #B86800; }
+.st-venc { background: #FFE5E5; color: #CC0000; }
+
+/* ─── STRIPE COLORS ───────────────────────── */
+.sc-pm1 { background: #007AFF; }
+.sc-pm2 { background: #34C759; }
+.sc-pm3 { background: #FF9500; }
+.sc-pm4 { background: #FF3B30; }
+.sc-pm5 { background: #5856D6; }
+.sc-pm6 { background: #32ADE6; }
+.sc-pm7 { background: #FF6B00; }
+.sc-pm8 { background: #FF2D55; }
+
+/* ─── MINI CALENDAR ───────────────────────── */
+.mini-cal {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.mc-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.mc-title { font-size: 15px; font-weight: 700; }
+.mc-nav { display: flex; gap: 4px; }
+.mc-btn {
+  width: 30px; height: 30px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.mc-btn:active { opacity: 0.6; }
+.mc-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.mc-dow { font-size: 10px; color: var(--text3); text-align: center; padding-bottom: 4px; font-weight: 600; }
+.mc-day {
+  font-size: 13px; text-align: center; padding: 5px 2px;
+  border-radius: 8px; cursor: pointer; color: var(--text2);
+  position: relative;
+}
+.mc-day.today {
+  background: var(--red); color: white; font-weight: 700;
+  border-radius: 50%; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  margin: auto; padding: 0;
+}
+.mc-day.has-ev::after {
+  content: ''; display: block; width: 4px; height: 4px;
+  background: var(--red); border-radius: 50%; margin: 1px auto 0;
+}
+.mc-day.today.has-ev::after { background: rgba(255,255,255,0.8); }
+.mc-day.om { opacity: 0.22; pointer-events: none; }
+
+/* ─── PLAN PM TABLE ───────────────────────── */
+.plan-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.plan-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.plan-row:last-child { border: none; }
+.plan-sys { flex: 1; font-size: 13px; color: var(--text); }
+.plan-int { font-size: 11px; color: var(--text3); text-align: right; white-space: nowrap; }
+.plan-note {
+  font-size: 11px;
+  color: var(--text3);
+  padding: 8px 14px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+/* ─── EMPTY STATE ─────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 52px 20px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 52px; margin-bottom: 12px; }
+.empty-txt  { font-size: 15px; }
+.empty-sub  { font-size: 13px; margin-top: 4px; }
+
+/* ─── FAB ─────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: calc(24px + var(--safe-b));
+  right: 20px;
+  width: 58px; height: 58px;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 30px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(204,0,0,0.45);
+  cursor: pointer;
+  z-index: 50;
+  line-height: 1;
+}
+.fab:active { transform: scale(0.9); background: var(--red-d); }
+
+/* ─── BOTTOM SHEET ────────────────────────── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+.overlay.open { display: block; }
+.sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  z-index: 101;
+  max-height: 94vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: var(--safe-b);
+}
+.sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.sheet-header {
+  padding: 14px 18px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-title { font-size: 18px; font-weight: 700; }
+.sheet-close {
+  width: 30px; height: 30px;
+  background: var(--bg);
+  border: none; border-radius: 50%;
+  font-size: 18px; color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.sheet-body { padding: 16px 18px; }
+.sheet-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+
+/* ─── FORM ELEMENTS ───────────────────────── */
+.fg { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.fl { font-size: 13px; font-weight: 600; color: var(--text2); }
+.fi {
+  padding: 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-s);
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  -webkit-appearance: none;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fi:focus { border-color: var(--red); }
+.fs {
+  padding: 13px 38px 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-s);
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  -webkit-appearance: none;
+  outline: none;
+  width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.15s;
+}
+.fs:focus { border-color: var(--red); }
+.fta {
+  padding: 13px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-s);
+  font-size: 15px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  resize: none;
+  min-height: 88px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fta:focus { border-color: var(--red); }
+.frow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* alert / info boxes */
+.alert { border-radius: var(--radius-s); padding: 11px 13px; font-size: 13px; margin-bottom: 14px; display: none; }
+.alert.show { display: block; }
+.alert-warn   { background: #FFF5E0; border: 1px solid #FFCC02; color: #7A4F00; }
+.alert-danger { background: #FFE5E5; border: 1px solid #FF3B30; color: #8B0000; }
+.alert-ok     { background: #E3F9E9; border: 1px solid #34C759; color: #0A4A1A; }
+.alert-info   { background: #EFE9FD; border: 1px solid #5856D6; color: #2E1B8C; }
+.svc-info { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-s); padding: 11px 13px; margin-bottom: 14px; font-size: 13px; color: var(--text2); display: none; }
+.svc-info.show { display: block; }
+.svc-info strong { color: var(--text); display: block; margin-bottom: 3px; font-size: 13px; }
+
+/* ─── BUTTONS ─────────────────────────────── */
+.btn-primary {
+  flex: 1;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: var(--radius-s);
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-primary:active { background: var(--red-d); transform: scale(0.98); }
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 15px;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-secondary:active { opacity: 0.7; }
+.btn-danger {
+  background: #FFE5E5;
+  color: #CC0000;
+  border: 1.5px solid #FFAAAA;
+  border-radius: var(--radius-s);
+  padding: 15px;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-danger:active { background: #FFCCCC; }
+
+/* ─── DETAIL SHEET ────────────────────────── */
+.det-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.det-item { display: flex; flex-direction: column; gap: 3px; }
+.det-lbl  { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.det-val  { font-size: 15px; font-weight: 700; }
+.km-bar-wrap { margin: 4px 0 6px; }
+.km-bar-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.km-bar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.km-bar-fill  { height: 100%; border-radius: 4px; }
+.task-ul { list-style: none; }
+.task-li {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 14px; color: var(--text2);
+}
+.task-li:last-child { border: none; }
+.task-li::before { content: '✓'; color: var(--red); font-weight: 700; flex-shrink: 0; }
+.obs-block {
+  background: var(--bg);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text2);
+  margin-top: 4px;
+  border: 1px solid var(--border);
+}
+
+/* ─── SCROLL INDICATOR ────────────────────── */
+.scroll-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text3);
+  padding: 6px 0 2px;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="status-bar"></div>
+
+  <div class="navbar">
+    <div class="navbar-top">
+      <div class="navbar-brand">
+        <div class="brand-icon">🔧</div>
+        <div class="brand-text">
+          <div class="brand-title">Toyota Fleet</div>
+          <div class="brand-sub">Proyecto Vicuña · Flota 65 unidades</div>
+        </div>
+      </div>
+      <button class="btn-add-nav" onclick="openAdd()" aria-label="Nuevo turno">+</button>
+    </div>
+    <div class="tabbar">
+      <button class="tab-btn active" onclick="setTab('inicio',this)">Inicio</button>
+      <button class="tab-btn" onclick="setTab('turnos',this)">Turnos</button>
+      <button class="tab-btn" onclick="setTab('flota',this)">Flota</button>
+      <button class="tab-btn" onclick="setTab('plan',this)">Plan PM</button>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+
+<button class="fab" onclick="openAdd()" aria-label="Nuevo turno">+</button>
+
+<!-- ADD OVERLAY -->
+<div class="overlay" id="addOverlay" onclick="closeAdd()"></div>
+<div class="sheet" id="addSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <span class="sheet-title">Nuevo turno</span>
+    <button class="sheet-close" onclick="closeAdd()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="fg">
+      <label class="fl">Patente / Dominio *</label>
+      <input class="fi" id="fDom" placeholder="AG287TV" autocomplete="off"
+             oninput="this.value=this.value.toUpperCase();onDomInput(this.value)"
+             list="flotaList">
+      <datalist id="flotaList"></datalist>
+      <div id="fDomInfo" style="font-size:12px;color:var(--text2);margin-top:4px;min-height:16px;"></div>
+    </div>
+    <div class="frow2">
+      <div class="fg">
+        <label class="fl">Km actuales *</label>
+        <input class="fi" type="number" inputmode="numeric" id="fKmA" placeholder="150000" oninput="calcKm()">
+      </div>
+      <div class="fg">
+        <label class="fl">Km último PM *</label>
+        <input class="fi" type="number" inputmode="numeric" id="fKmU" placeholder="145000" oninput="calcKm()">
+      </div>
+    </div>
+    <div id="interPM" class="alert alert-info">⚡ <strong>Inter-PM 2.500 km:</strong> Corresponde limpieza de admisión y cambio de filtro por contaminación de sílice.</div>
+    <div id="kmAlert" class="alert"></div>
+    <div class="fg">
+      <label class="fl">Tipo de servicio *</label>
+      <select class="fs" id="fPM" onchange="updateSvcInfo()">
+        <option value="">Seleccionar tipo...</option>
+        <option value="PM5">PM 5.000 km — Estándar base</option>
+        <option value="PM10">PM 10.000 km — + Diagnóstico</option>
+        <option value="PM40">PM 40.000 km — + Líquido frenos</option>
+        <option value="PM75">PM 75.000 km — + Cadena distribución</option>
+        <option value="PM80">PM 80.000 km — + Aceites transmisión/dif.</option>
+        <option value="INTER">Inter-PM 2.500 km — Filtro admisión/sílice</option>
+        <option value="CORR">Correctivo — Reparación imprevista</option>
+        <option value="PRED">Predictivo — Análisis de fluidos</option>
+      </select>
+    </div>
+    <div id="svcInfo" class="svc-info"></div>
+    <div class="fg">
+      <label class="fl">Fecha del turno *</label>
+      <input class="fi" type="date" id="fFecha">
+    </div>
+    <div class="fg">
+      <label class="fl">Área asignada *</label>
+      <select class="fs" id="fArea">
+        <option value="">Seleccionar área...</option>
+        <option>Operaciones Mina</option>
+        <option>Logística</option>
+        <option>Procesamiento</option>
+        <option>Mantenimiento</option>
+        <option>EHS</option>
+        <option>Geología</option>
+        <option>Supply Chain</option>
+        <option>RRHH</option>
+        <option>Gerencia</option>
+        <option>Seguridad</option>
+        <option>Salud / Ambiente</option>
+        <option>IT</option>
+        <option>Edilicio</option>
+        <option>Transporte</option>
+        <option>General</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Técnico asignado</label>
+      <input class="fi" id="fTec" placeholder="Nombre del técnico" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label class="fl">Observaciones</label>
+      <textarea class="fta" id="fObs" placeholder="Fallas reportadas, novedades de seguridad, síntomas..."></textarea>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button class="btn-secondary" onclick="closeAdd()">Cancelar</button>
+    <button class="btn-primary" onclick="saveEv()">Guardar turno</button>
+  </div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="detOverlay" onclick="closeDet()"></div>
+<div class="sheet" id="detSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div>
+      <div class="sheet-title" id="dTitle">—</div>
+      <div id="dBadges" style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+    <button class="sheet-close" onclick="closeDet()">✕</button>
+  </div>
+  <div class="sheet-body" id="dBody"></div>
+  <div class="sheet-footer">
+    <button class="btn-danger" onclick="delEv()">Eliminar</button>
+    <button class="btn-primary" onclick="closeDet()">Cerrar</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────
+const PMS = {
+  PM5:  { label:'PM 5.000 km', short:'PM-5k', color:'pm1', sc:'sc-pm1', km:5000,
+    info:'Cambio de aceite + 3 filtros + muestra y presión de aceite + engrase cardán + inspección completa de todos los sistemas.',
+    tasks:['Cambio aceite motor','Reemplazo filtro aceite','Reemplazo filtro aire','Reemplazo filtro combustible','Toma muestra aceite motor','Medición presión aceite (ralentí + 3000 RPM)','Engrase crucetas cardán','Inspección frenos y embrague','Inspección dirección y suspensión','Inspección sistema eléctrico','Inspección neumáticos y carrocería','Inspección sistema refrigeración','Inspección tren de fuerza','Control de calidad'] },
+  PM10: { label:'PM 10.000 km', short:'PM-10k', color:'pm2', sc:'sc-pm2', km:10000,
+    info:'Todo el PM 5.000 km + diagnóstico computarizado Toyota + chequeo bujías de precalentamiento.',
+    tasks:['Todo lo de PM 5.000 km','Diagnóstico computarizado Toyota','Chequeo bujías de precalentamiento','Inspección correa de servicio'] },
+  PM40: { label:'PM 40.000 km', short:'PM-40k', color:'pm3', sc:'sc-pm3', km:40000,
+    info:'Todo el PM 10.000 km + cambio de líquido de frenos (intervalo 40.000 km).',
+    tasks:['Todo lo de PM 10.000 km','Cambio líquido de frenos','Ajuste cable freno de estacionamiento'] },
+  PM75: { label:'PM 75.000 km', short:'PM-75k', color:'pm4', sc:'sc-pm4', km:75000,
+    info:'Todo el PM 10.000 km + reemplazo de cadena de distribución (intervalo 75.000 km).',
+    tasks:['Todo lo de PM 10.000 km','Reemplazo cadena de distribución','Control sistema de distribución'] },
+  PM80: { label:'PM 80.000 km', short:'PM-80k', color:'pm5', sc:'sc-pm5', km:80000,
+    info:'Todo el PM 10.000 km + cambio de aceite transmisión, transferencia y diferenciales + refrigerante LLC + batería.',
+    tasks:['Todo lo de PM 10.000 km','Cambio aceite transmisión','Cambio aceite transferencia','Cambio aceite diferenciales','Cambio refrigerante LLC','Reemplazo batería anual'] },
+  INTER:{ label:'Inter-PM 2.500 km', short:'Inter-PM', color:'pm6', sc:'sc-pm6', km:2500,
+    info:'Servicio intermedio a los 2.500 km: limpieza del sistema de admisión y cambio de filtro por contaminación de sílice (alta montaña).',
+    tasks:['Cambio filtro admisión','Limpieza sistema de admisión','Control nivel sílice en aceite'] },
+  CORR: { label:'Correctivo', short:'Correctivo', color:'pm7', sc:'sc-pm7', km:0,
+    info:'Reparación correctiva no programada: diagnóstico de falla, reparación, registro en backlog y novedades de seguridad (ATS).',
+    tasks:['Diagnóstico de falla','Reparación según diagnóstico','Registro en backlog','Novedades de seguridad (ATS)'] },
+  PRED: { label:'Predictivo', short:'Predictivo', color:'pm8', sc:'sc-pm8', km:0,
+    info:'Muestra de aceite + medición de presión + análisis de contaminantes Fe/Cr/Ni/Al/Pb/Si. Recomendación según PPM de sílice.',
+    tasks:['Toma muestra aceite motor','Análisis contaminantes (Fe/Cr/Ni/Al/Pb/Si)','Medición presión aceite','Evaluación viscosidad','Recomendación preventiva según PPM sílice'] }
+};
+
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DOWS   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function loadEvents() {
+  try {
+    const raw = localStorage.getItem('tf_vicuna_v1');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+// ─── FLOTA VICUÑA ─────────────────────────────────────────────────────────
+const FLOTA_VICUNA = [
+  {patente:"OTV221",  vehiculo:"FIAT FIORINO FURGON 1.4 EVO",               año:2015},
+  {patente:"OKR613",  vehiculo:"VOLKSWAGEN GOL TREND 1.6 5P",                año:2015},
+  {patente:"AG287TV", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG287TT", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG287TU", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG287TX", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG287TZ", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG287TY", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG356JV", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG331LO", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG356JW", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG287TW", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG310QA", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG331LQ", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG331LR", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG331LS", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG331LP", vehiculo:"TOYOTA HILUX L/21 2.8 DC 4X4 TDI SR",       año:2023},
+  {patente:"AG356JE", vehiculo:"TOYOTA HILUX SW4 TDI SRX AUT L/23",          año:2023},
+  {patente:"AG331LZ", vehiculo:"TOYOTA HILUX SW4 TDI SRX AUT L/23",          año:2023},
+  {patente:"AF953DY", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR",       año:2024},
+  {patente:"AG365GT", vehiculo:"VOLKSWAGEN VIRTUS 1.0 TSI HIGHLINE AT",      año:2024},
+  {patente:"AI077WK", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WJ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WI", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WH", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WG", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WF", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WE", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI077WD", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI029RZ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AH836XW", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AH836XX", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AH836XY", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AH836XZ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AH836YA", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AH836YC", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI029RY", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WI", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WQ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WE", vehiculo:"TOYOTA SW4 TDI SRX AUT L/24",                año:2026},
+  {patente:"AI103WE", vehiculo:"TOYOTA SW4 TDI SRX AUT L/24",                año:2026},
+  {patente:"AI079WJ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WK", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WQ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WS", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WX", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WV", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WY", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WO", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WP", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WV", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WW", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WX", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WY", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI103WZ", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WD", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WF", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WH", vehiculo:"TOYOTA HILUX L/24 2.8 DC 4X4 TDI SR AT6",   año:2026},
+  {patente:"AI079WT", vehiculo:"TOYOTA SW4 TDI SRX AUT L/24",                año:2026},
+  {patente:"AI103WD", vehiculo:"TOYOTA SW4 TDI SRX AUT L/24",                año:2026},
+  {patente:"AI035JZ", vehiculo:"TOYOTA SW4 TDI SRX AUT L/24",                año:2026},
+  {patente:"AI029RN", vehiculo:"TOYOTA SW4 TDI SRX AUT L/24",                año:2026},
+  {patente:"AI029RO", vehiculo:"TOYOTA HIACE 2.8 WAGON AT6 10 AS.",          año:2026},
+  {patente:"AI012SL", vehiculo:"COROLLA HEV 1.8 SEG ECTV",                   año:2026},
+  {patente:"AI012SM", vehiculo:"COROLLA HEV 1.8 SEG ECTV",                   año:2026}
+];
+
+function initFlotaDatalist() {
+  const dl = document.getElementById('flotaList');
+  if (!dl) return;
+  dl.innerHTML = FLOTA_VICUNA.map(v =>
+    `<option value="${v.patente}">${v.patente} — ${v.vehiculo} (${v.año})</option>`
+  ).join('');
+}
+
+function onDomInput(val) {
+  const info = document.getElementById('fDomInfo');
+  if (!info) return;
+  const v = FLOTA_VICUNA.find(x => x.patente === val.trim());
+  info.textContent = v ? `${v.vehiculo} · ${v.año}` : '';
+}
+
+// ─── FIN FLOTA VICUÑA ──────────────────────────────────────────────────────
+
+let events = loadEvents();
+let nid = Math.max(0, ...events.map(e => e.id)) + 1;
+let curTab = 'inicio';
+let vDate  = new Date(2026, 4, 1);
+let selId  = null;
+let srch   = '';
+
+function saveLS() {
+  try { localStorage.setItem('tf_vicuna_v1', JSON.stringify(events)); } catch(e) {}
+}
+const TODAY    = new Date(2026, 4, 12);
+const NOW_DAY  = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
+const fmtKm    = n  => n.toLocaleString('es-AR') + ' km';
+const fmtDate  = s  => { const d = new Date(s+'T12:00:00'); return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)} ${d.getFullYear()}`; };
+
+function getStatus(e) {
+  const pm = PMS[e.pm], diff = e.kmA - e.kmU;
+  const eDate = new Date(e.fecha+'T12:00:00');
+  if (eDate < NOW_DAY)                      return { sc:'st-venc', st:'Vencido' };
+  if (pm.km > 0 && diff >= pm.km * 0.9)    return { sc:'st-prox', st:'Próximo límite' };
+  return { sc:'st-ok', st:'Pendiente' };
+}
+function barColor(pct) {
+  if (pct >= 100) return '#FF3B30';
+  if (pct >= 85)  return '#FF9500';
+  return '#34C759';
+}
+
+// ── RENDER ────────────────────────────────────────────────
+function setTab(t, el) {
+  curTab = t;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const c = document.getElementById('content');
+  if      (curTab === 'inicio')  renderInicio(c);
+  else if (curTab === 'turnos')  renderTurnos(c);
+  else if (curTab === 'flota')   renderFlota(c);
+  else                           renderPlan(c);
+}
+
+function renderInicio(c) {
+  const now = NOW_DAY;
+  const upcoming = [...events]
+    .sort((a,b) => a.fecha.localeCompare(b.fecha))
+    .filter(e => new Date(e.fecha+'T12:00:00') >= now);
+
+  const total  = events.length;
+  const ok     = events.filter(e => getStatus(e).sc === 'st-ok').length;
+  const prox   = events.filter(e => getStatus(e).sc === 'st-prox').length;
+  const venc   = events.filter(e => getStatus(e).sc === 'st-venc').length;
+
+  let html = `
+    <div class="kpi-strip">
+      <div class="kpi-card kpi-blue"><div class="kpi-num">${total}</div><div class="kpi-lbl">Turnos</div></div>
+      <div class="kpi-card" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-s);padding:10px 8px;text-align:center;flex:1;"><div class="kpi-num" style="color:#5856D6;">${FLOTA_VICUNA.length}</div><div class="kpi-lbl">Flota</div></div>
+      <div class="kpi-card kpi-orange"><div class="kpi-num">${prox}</div><div class="kpi-lbl">Por vencer</div></div>
+      <div class="kpi-card kpi-red"><div class="kpi-num">${venc}</div><div class="kpi-lbl">Vencidos</div></div>
+    </div>
+    ${buildCal()}
+    <div class="sec-hdr">Próximos turnos</div>
+    <div class="ev-list">`;
+
+  if (!upcoming.length) {
+    html += `<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">Sin turnos próximos</div><div class="empty-sub">Tocá + para agregar uno</div></div>`;
+  } else {
+    upcoming.slice(0, 10).forEach(e => { html += buildCard(e); });
+  }
+
+  html += `</div>`;
+  c.innerHTML = html;
+  bindCards(c);
+  c.querySelector('#mc-prev')?.addEventListener('click', () => { vDate = new Date(vDate.getFullYear(), vDate.getMonth()-1, 1); render(); });
+  c.querySelector('#mc-next')?.addEventListener('click', () => { vDate = new Date(vDate.getFullYear(), vDate.getMonth()+1, 1); render(); });
+}
+
+function renderTurnos(c) {
+  let list = [...events].sort((a,b) => a.fecha.localeCompare(b.fecha));
+  if (srch) {
+    const q = srch.toLowerCase();
+    list = list.filter(e =>
+      e.dom.toLowerCase().includes(q) ||
+      (e.vehiculo||'').toLowerCase().includes(q) ||
+      e.area.toLowerCase().includes(q) ||
+      (e.tec||'').toLowerCase().includes(q)
+    );
+  }
+
+  let html = `
+    <div class="searchbar">
+      <span class="searchbar-icon">🔍</span>
+      <input placeholder="Buscar patente, área, técnico..." value="${srch}" oninput="srch=this.value;renderTurnos(document.getElementById('content'))">`
+    </div>`;
+
+  if (!list.length) {
+    html += `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-txt">Sin resultados</div></div>`;
+  } else {
+    html += `<div class="ev-list">`;
+    list.forEach(e => { html += buildCard(e); });
+    html += `</div>`;
+  }
+
+  c.innerHTML = html;
+  bindCards(c);
+}
+
+  bindCards(c);
+}
+
+function renderFlota(c) {
+  const busq = (document.getElementById('flotaBusq') || {value:''}).value || '';
+  const q = busq.toLowerCase();
+  const lista = FLOTA_VICUNA.filter(v =>
+    v.patente.toLowerCase().includes(q) ||
+    v.vehiculo.toLowerCase().includes(q) ||
+    String(v.año).includes(q)
+  );
+
+  // Contar turnos por patente
+  const turnosPorPatente = {};
+  events.forEach(e => {
+    turnosPorPatente[e.dom] = (turnosPorPatente[e.dom] || 0) + 1;
+  });
+
+  let html = `
+    <div class="sec-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>Flota Vicuña — ${FLOTA_VICUNA.length} unidades</span>
+    </div>
+    <div style="padding:0 16px 8px;">
+      <input class="fi" id="flotaBusq" placeholder="Buscar patente, modelo, año..."
+        value="${busq}" style="margin-bottom:0;"
+        oninput="renderFlota(document.getElementById('content'))">
+    </div>
+    <div style="padding:0 16px 8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <span style="font-size:12px;color:var(--text3);">${lista.length} resultado${lista.length!==1?'s':''}</span>
+    </div>
+    <div style="padding:0 12px 80px;">`;
+
+  lista.forEach(v => {
+    const t = turnosPorPatente[v.patente] || 0;
+    const isToyota = v.vehiculo.includes('TOYOTA') || v.vehiculo.includes('COROLLA');
+    const icon = isToyota ? '🚙' : '🚗';
+    html += `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;width:36px;text-align:center;">${icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.03em;">${v.patente}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${v.vehiculo}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Año ${v.año}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${t > 0
+            ? `<span style="background:#34C75920;color:#34C759;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">${t} turno${t!==1?'s':''}</span>`
+            : `<span style="background:var(--border);color:var(--text3);border-radius:20px;padding:3px 10px;font-size:12px;">Sin turnos</span>`
+          }
+        </div>
+      </div>`;
+  });
+
+  html += `</div>`;
+  c.innerHTML = html;
+}
+
+
+  const rows = [
+    ['Aceite motor', 'Cada PM — 5.000 km', 'R', 'pm4'],
+    ['Filtro aceite', 'Cada PM — 5.000 km', 'R', 'pm4'],
+    ['Filtro aire', 'Cada PM — 5.000 km', 'R', 'pm4'],
+    ['Filtro combustible', 'Cada PM — 5.000 km', 'R', 'pm4'],
+    ['Filtro admisión + limpieza sílice', 'Inter-PM — 2.500 km', 'R', 'pm6'],
+    ['Diagnóstico computarizado Toyota', '10.000 km', 'D', 'pm1'],
+    ['Líquido de frenos', '40.000 km', 'R', 'pm3'],
+    ['Cadena de distribución', '75.000 km', 'R', 'pm5'],
+    ['Aceite transmisión / transferencia / dif.', '80.000 km', 'R', 'pm5'],
+    ['Refrigerante LLC', '80.000 km', 'R', 'pm1'],
+    ['Batería', 'Anual', 'R', 'pm3'],
+    ['Correa de servicio', 'Cada PM', 'I', 'pm3'],
+    ['Sistema frenos y embrague', 'Cada PM', 'I', 'pm3'],
+    ['Dirección y suspensión', 'Cada PM', 'I', 'pm3'],
+    ['Sistema eléctrico', 'Cada PM', 'I', 'pm3'],
+    ['Neumáticos y carrocería', 'Cada PM', 'I', 'pm3'],
+    ['Engrase crucetas cardán', '5.000 km', 'E', 'pm2'],
+    ['Muestra aceite + PPM sílice', 'Cada PM', 'M', 'pm6'],
+    ['Presión aceite (ralentí + 3000 RPM)', 'Cada PM', 'M', 'pm6'],
+    ['Limpieza admisión completa', 'Condicional (Si elevado)', 'L', 'pm7'],
+    ['Cambio viscosidad aceite', 'Condicional (presión baja)', 'C', 'pm8'],
+    ['Lavado vapor condensador/radiador', 'Según necesidad', 'L', 'pm7'],
+  ];
+
+  let html = `
+    <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
+      Plan Toyota Hilux — Uso extremo · Cadencia base 5.000 km<br>
+      <span style="font-size:12px;color:var(--text3);">⚡ 1 h ralentí = 70 km · Proyecto Vicuña (3.000–5.000 msnm)</span>
+    </div>
+    <div class="plan-card">`;
+
+  rows.forEach(([sys, int, act, col]) => {
+    html += `
+      <div class="plan-row">
+        <span class="plan-sys">${sys}</span>
+        <span class="plan-int">${int}</span>
+        <span class="badge ${col}" style="font-size:10px;">${act}</span>
+      </div>`;
+  });
+
+  html += `<div class="plan-note">R = Reemplazar &nbsp;·&nbsp; I = Inspeccionar &nbsp;·&nbsp; D = Diagnóstico &nbsp;·&nbsp; E = Engrase &nbsp;·&nbsp; M = Muestra &nbsp;·&nbsp; L = Limpieza &nbsp;·&nbsp; C = Condicional</div></div>`;
+  c.innerHTML = html;
+}
+
+// ── CALENDAR ──────────────────────────────────────────────
+function buildCal() {
+  const y = vDate.getFullYear(), m = vDate.getMonth();
+  const evDates = new Set(events.map(e => e.fecha));
+  const first = new Date(y,m,1).getDay();
+  const days  = new Date(y,m+1,0).getDate();
+  const prev  = new Date(y,m,0).getDate();
+  const td    = TODAY;
+
+  let html = `<div class="mini-cal">
+    <div class="mc-head">
+      <span class="mc-title">${MONTHS[m]} ${y}</span>
+      <div class="mc-nav">
+        <button class="mc-btn" id="mc-prev">‹</button>
+        <button class="mc-btn" id="mc-next">›</button>
+      </div>
+    </div>
+    <div class="mc-grid">`;
+
+  DOWS.forEach(d => { html += `<div class="mc-dow">${d[0]}</div>`; });
+  for (let i = first-1; i >= 0; i--) html += `<div class="mc-day om">${prev-i}</div>`;
+  for (let d = 1; d <= days; d++) {
+    const ds  = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls   = 'mc-day';
+    if (d === td.getDate() && m === td.getMonth() && y === td.getFullYear()) cls += ' today';
+    if (evDates.has(ds)) cls += ' has-ev';
+    html += `<div class="${cls}">${d}</div>`;
+  }
+  const rem = 42 - first - days;
+  for (let d = 1; d <= rem; d++) html += `<div class="mc-day om">${d}</div>`;
+
+  html += `</div></div>`;
+  return html;
+}
+
+// ── EVENT CARD HTML ────────────────────────────────────────
+function buildCard(e) {
+  const pm = PMS[e.pm];
+  const { sc, st } = getStatus(e);
+  return `
+    <div class="ev-card" data-id="${e.id}">
+      <div class="ev-stripe ${pm.sc}"></div>
+      <div class="ev-body">
+        <div class="ev-row1">
+          <div>
+            <span class="ev-dom">${e.dom}</span>
+            ${e.vehiculo ? `<span class="ev-int" style="font-size:10px;"> ${e.vehiculo}</span>` : ''}
+          </div>
+          <span class="ev-date">${fmtDate(e.fecha)}</span>
+        </div>
+        <div class="ev-row2">
+          <span class="badge ${pm.color}">${pm.short}</span>
+          <span class="badge ${sc}">${st}</span>
+          <span class="ev-area">${e.area}</span>
+        </div>
+        ${e.obs ? `<div class="ev-obs">${e.obs}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+function bindCards(root) {
+  root.querySelectorAll('.ev-card[data-id]').forEach(el => {
+    el.addEventListener('click', () => openDet(parseInt(el.dataset.id)));
+  });
+}
+
+// ── FORM ──────────────────────────────────────────────────
+function updateSvcInfo() {
+  const v   = document.getElementById('fPM').value;
+  const box = document.getElementById('svcInfo');
+  if (v && PMS[v]) {
+    box.innerHTML = `<strong>${PMS[v].label}</strong>${PMS[v].info}`;
+    box.classList.add('show');
+  } else {
+    box.classList.remove('show');
+  }
+}
+
+function calcKm() {
+  const a  = parseInt(document.getElementById('fKmA').value) || 0;
+  const u  = parseInt(document.getElementById('fKmU').value) || 0;
+  const al = document.getElementById('kmAlert');
+  const ip = document.getElementById('interPM');
+
+  if (a && u) {
+    const diff = a - u;
+    if (a < u) {
+      al.className = 'alert alert-danger show';
+      al.textContent = '⚠ Los km actuales no pueden ser menores al último servicio.';
+    } else if (diff >= 5000) {
+      al.className = 'alert alert-danger show';
+      al.textContent = `🔴 Diferencia: ${diff.toLocaleString('es-AR')} km — umbral 5.000 km superado. Servicio vencido.`;
+    } else if (diff >= 4500) {
+      al.className = 'alert alert-warn show';
+      al.textContent = `⚠ Diferencia: ${diff.toLocaleString('es-AR')} km — próximo al límite de 5.000 km.`;
+    } else {
+      al.className = 'alert alert-ok show';
+      al.textContent = `✓ Diferencia: ${diff.toLocaleString('es-AR')} km — dentro del rango correcto.`;
+    }
+    if (diff >= 2400 && diff <= 2600) ip.classList.add('show');
+    else ip.classList.remove('show');
+  } else {
+    al.className = 'alert';
+    ip.classList.remove('show');
+  }
+}
+
+function openAdd() {
+  ['fDom','fKmA','fKmU','fTec','fObs'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('fDomInfo').textContent = '';
+  initFlotaDatalist();
+  document.getElementById('fPM').value   = '';
+  document.getElementById('fArea').value = '';
+  const today = TODAY;
+  const dd = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  document.getElementById('fFecha').value = dd;
+  document.getElementById('kmAlert').className = 'alert';
+  document.getElementById('svcInfo').classList.remove('show');
+  document.getElementById('interPM').classList.remove('show');
+  document.getElementById('addOverlay').classList.add('open');
+  document.getElementById('addSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('fDom').focus(), 350);
+}
+
+function closeAdd() {
+  document.getElementById('addOverlay').classList.remove('open');
+  document.getElementById('addSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveEv() {
+  const dom   = document.getElementById('fDom').value.trim();
+  const fecha = document.getElementById('fFecha').value;
+  const kmA   = parseInt(document.getElementById('fKmA').value);
+  const kmU   = parseInt(document.getElementById('fKmU').value);
+  const pm    = document.getElementById('fPM').value;
+  const area  = document.getElementById('fArea').value;
+
+  if (!dom || !fecha || !kmA || !kmU || !pm || !area) {
+    alert('Por favor completá todos los campos obligatorios (*).');
+    return;
+  }
+  if (kmA < kmU) {
+    alert('Los km actuales no pueden ser menores al último servicio.');
+    return;
+  }
+
+  const flotaItem = FLOTA_VICUNA.find(x => x.patente === dom);
+  const ev = {
+    id:    nid++,
+    dom,
+    vehiculo: flotaItem ? flotaItem.vehiculo : '',
+    año:      flotaItem ? flotaItem.año : '',
+    fecha,
+    kmA,
+    kmU,
+    pm,
+    area,
+    tec:   document.getElementById('fTec').value.trim(),
+    obs:   document.getElementById('fObs').value.trim()
+  };
+
+  events.push(ev);
+  saveLS();
+  closeAdd();
+  render();
+}
+
+// ── DETAIL ────────────────────────────────────────────────
+function openDet(id) {
+  const e = events.find(x => x.id === id);
+  if (!e) return;
+  selId = id;
+
+  const pm   = PMS[e.pm];
+  const diff = e.kmA - e.kmU;
+  const pct  = pm.km > 0 ? Math.min(Math.round(diff / pm.km * 100), 100) : 0;
+  const bc   = barColor(pct);
+  const { sc, st } = getStatus(e);
+
+  document.getElementById('dTitle').textContent = e.dom + (e.vehiculo ? ' — ' + e.vehiculo : '');
+  document.getElementById('dBadges').innerHTML =
+    `<span class="badge ${pm.color}">${pm.label}</span>
+     <span class="badge ${sc}">${st}</span>`;
+
+  const kmBar = pm.km > 0 ? `
+    <div class="km-bar-wrap">
+      <div class="km-bar-labels">
+        <span>Km últ. PM: ${fmtKm(e.kmU)}</span>
+        <span style="color:${bc};font-weight:700;">${fmtKm(diff)} (${pct}%)</span>
+      </div>
+      <div class="km-bar-track">
+        <div class="km-bar-fill" style="width:${pct}%;background:${bc};"></div>
+      </div>
+    </div>` : '';
+
+  const tasks = pm.tasks.map(t => `<li class="task-li">${t}</li>`).join('');
+
+  document.getElementById('dBody').innerHTML = `
+    <div class="det-grid">
+      <div class="det-item"><span class="det-lbl">Dominio</span><span class="det-val">${e.dom}</span></div>
+      <div class="det-item"><span class="det-lbl">Vehículo</span><span class="det-val">${e.vehiculo || '—'}</span></div>
+      <div class="det-item"><span class="det-lbl">Año</span><span class="det-val">${e.año || '—'}</span></div>
+      <div class="det-item"><span class="det-lbl">Km actuales</span><span class="det-val">${fmtKm(e.kmA)}</span></div>
+      <div class="det-item"><span class="det-lbl">Km último PM</span><span class="det-val">${fmtKm(e.kmU)}</span></div>
+      <div class="det-item"><span class="det-lbl">Diferencia</span><span class="det-val" style="color:${bc};">${fmtKm(diff)}</span></div>
+      <div class="det-item"><span class="det-lbl">Fecha</span><span class="det-val" style="font-size:13px;">${fmtDate(e.fecha)}</span></div>
+      <div class="det-item"><span class="det-lbl">Área</span><span class="det-val" style="font-size:13px;">${e.area}</span></div>
+      <div class="det-item"><span class="det-lbl">Técnico</span><span class="det-val" style="font-size:13px;">${e.tec || '—'}</span></div>
+    </div>
+    ${kmBar}
+    <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Tareas incluidas</div>
+    <ul class="task-ul">${tasks}</ul>
+    ${e.obs ? `
+      <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin:14px 0 6px;">Observaciones</div>
+      <div class="obs-block">${e.obs}</div>` : ''}
+  `;
+
+  document.getElementById('detOverlay').classList.add('open');
+  document.getElementById('detSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDet() {
+  document.getElementById('detOverlay').classList.remove('open');
+  document.getElementById('detSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function delEv() {
+  if (!selId) return;
+  if (!confirm('¿Eliminar este turno?')) return;
+  events = events.filter(e => e.id !== selId);
+  saveLS();
+  closeDet();
+  render();
+}
+
+// ── SERVICE WORKER ─────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ── URL SHORTCUT ───────────────────────────────────────────
+if (new URLSearchParams(location.search).get('action') === 'new') {
+  window.addEventListener('load', () => setTimeout(openAdd, 400));
+}
+
+// ── INIT ───────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
