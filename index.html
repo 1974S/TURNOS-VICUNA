@@ -1504,6 +1504,9 @@ function saveEv() {
   }
 
   const flotaItem = FLOTA_VICUNA.find(x => x.patente === dom);
+  const checklist = (planData && planData[pm])
+    ? planData[pm].map(t => ({ id: t.id, n: t.n, sys: t.sys, freq: t.freq, costo: t.costo || 0, tiempo: t.tiempo || '', repuestos: t.repuestos || [], notas: t.notas || '', done: false }))
+    : null;
   const ev = {
     id:    nid++,
     dom,
@@ -1515,7 +1518,8 @@ function saveEv() {
     pm,
     area,
     tec:   document.getElementById('fTec').value.trim(),
-    obs:   document.getElementById('fObs').value.trim()
+    obs:   document.getElementById('fObs').value.trim(),
+    checklist
   };
 
   events.push(ev);
@@ -1553,7 +1557,28 @@ function openDet(id) {
       </div>
     </div>` : '';
 
-  const tasks = pm.tasks.map(t => `<li class="task-li">${t}</li>`).join('');
+  let tasksHtml;
+  let costoHtml = '';
+  if (e.checklist && e.checklist.length) {
+    const totalCosto = e.checklist.reduce((s, t) => s + (t.costo || 0), 0);
+    const doneCount = e.checklist.filter(t => t.done).length;
+    const pct2 = Math.round(doneCount / e.checklist.length * 100);
+    tasksHtml = e.checklist.map(t => `
+      <li class="task-li" style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;list-style:none;">
+        <div onclick="toggleEvTask('${t.id}')" style="width:20px;height:20px;border-radius:50%;border:2px solid ${t.done?'#34C759':'var(--border)'};background:${t.done?'#34C759':'transparent'};flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:1px;">${t.done?'<span style="color:white;font-size:11px;">✓</span>':''}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;${t.done?'text-decoration:line-through;opacity:0.6;':''}"><span style="color:var(--text3);">${t.n}.</span> ${t.sys}</div>
+          ${t.costo > 0 ? `<div style="font-size:11px;color:var(--text3);margin-top:2px;">💰 $${t.costo.toLocaleString('es-AR')}${t.tiempo ? ' · ⏱ ' + t.tiempo : ''}</div>` : ''}
+        </div>
+      </li>`).join('');
+    costoHtml = `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-s);padding:10px 14px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12.5px;color:var(--text2);">${doneCount}/${e.checklist.length} completadas (${pct2}%)</span>
+        <span style="font-size:15px;font-weight:700;color:var(--red);">$ ${totalCosto.toLocaleString('es-AR')}</span>
+      </div>`;
+  } else {
+    tasksHtml = pm.tasks.map(t => `<li class="task-li">${t}</li>`).join('');
+  }
 
   document.getElementById('dBody').innerHTML = `
     <div class="det-grid">
@@ -1569,7 +1594,8 @@ function openDet(id) {
     </div>
     ${kmBar}
     <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Tareas incluidas</div>
-    <ul class="task-ul">${tasks}</ul>
+    ${costoHtml}
+    <ul class="task-ul">${tasksHtml}</ul>
     ${e.obs ? `
       <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin:14px 0 6px;">Observaciones</div>
       <div class="obs-block">${e.obs}</div>` : ''}
@@ -1578,6 +1604,17 @@ function openDet(id) {
   document.getElementById('detOverlay').classList.add('open');
   document.getElementById('detSheet').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function toggleEvTask(taskId) {
+  const e = events.find(x => x.id === selId);
+  if (!e || !e.checklist) return;
+  const t = e.checklist.find(x => x.id === taskId);
+  if (!t) return;
+  t.done = !t.done;
+  saveLS();
+  saveFirebase(e);
+  openDet(selId);
 }
 
 function closeDet() {
