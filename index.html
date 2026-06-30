@@ -308,6 +308,12 @@ body {
 }
 .mc-day.today.has-ev::after { background: rgba(255,255,255,0.8); }
 .mc-day.om { opacity: 0.22; pointer-events: none; }
+.mc-day.sel:not(.today) {
+  background: rgba(204,0,0,0.15); border: 1.5px solid var(--red);
+  border-radius: 50%; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  margin: auto; padding: 0; color: var(--red); font-weight: 700;
+}
 
 /* ─── PLAN PM TABLE ───────────────────────── */
 .plan-card {
@@ -841,6 +847,7 @@ let curTab = 'inicio';
 let vDate  = new Date(); vDate = new Date(vDate.getFullYear(), vDate.getMonth(), 1);
 let selId  = null;
 let srch   = '';
+let selDay = null;
 
 function saveLS() {
   try { localStorage.setItem('tf_vicuna_v1', JSON.stringify(events)); } catch(e) {}
@@ -889,9 +896,18 @@ function render() {
 
 function renderInicio(c) {
   const now = NOW_DAY;
-  const upcoming = [...events]
-    .sort((a,b) => a.fecha.localeCompare(b.fecha))
-    .filter(e => new Date(e.fecha+'T12:00:00') >= now);
+  let list, sectionTitle;
+
+  if (selDay) {
+    list = events.filter(e => e.fecha === selDay).sort((a,b) => a.fecha.localeCompare(b.fecha));
+    const d = new Date(selDay+'T12:00:00');
+    sectionTitle = `Turnos del ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  } else {
+    list = [...events]
+      .sort((a,b) => a.fecha.localeCompare(b.fecha))
+      .filter(e => new Date(e.fecha+'T12:00:00') >= now);
+    sectionTitle = 'Próximos turnos';
+  }
 
   const total  = events.length;
   const ok     = events.filter(e => getStatus(e).sc === 'st-ok').length;
@@ -906,13 +922,16 @@ function renderInicio(c) {
       <div class="kpi-card kpi-red"><div class="kpi-num">${venc}</div><div class="kpi-lbl">Vencidos</div></div>
     </div>
     ${buildCal()}
-    <div class="sec-hdr">Próximos turnos</div>
+    <div class="sec-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>${sectionTitle}</span>
+      ${selDay ? `<span style="color:var(--red);font-size:13px;cursor:pointer;font-weight:600;" onclick="clearDay()">Ver todos ✕</span>` : ''}
+    </div>
     <div class="ev-list">`;
 
-  if (!upcoming.length) {
-    html += `<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">Sin turnos próximos</div><div class="empty-sub">Tocá + para agregar uno</div></div>`;
+  if (!list.length) {
+    html += `<div class="empty"><div class="empty-icon">📅</div><div class="empty-txt">${selDay ? 'Sin turnos este día' : 'Sin turnos próximos'}</div><div class="empty-sub">Tocá + para agregar uno</div></div>`;
   } else {
-    upcoming.slice(0, 10).forEach(e => { html += buildCard(e); });
+    list.slice(0, 20).forEach(e => { html += buildCard(e); });
   }
 
   html += `</div>`;
@@ -920,6 +939,16 @@ function renderInicio(c) {
   bindCards(c);
   c.querySelector('#mc-prev')?.addEventListener('click', () => { vDate = new Date(vDate.getFullYear(), vDate.getMonth()-1, 1); render(); });
   c.querySelector('#mc-next')?.addEventListener('click', () => { vDate = new Date(vDate.getFullYear(), vDate.getMonth()+1, 1); render(); });
+}
+
+function selectDay(ds) {
+  selDay = (selDay === ds) ? null : ds;
+  render();
+}
+
+function clearDay() {
+  selDay = null;
+  render();
 }
 
 function renderTurnos(c) {
@@ -1080,7 +1109,8 @@ function buildCal() {
     let cls   = 'mc-day';
     if (d === td.getDate() && m === td.getMonth() && y === td.getFullYear()) cls += ' today';
     if (evDates.has(ds)) cls += ' has-ev';
-    html += `<div class="${cls}">${d}</div>`;
+    if (selDay === ds) cls += ' sel';
+    html += `<div class="${cls}" data-date="${ds}" onclick="selectDay('${ds}')">${d}</div>`;
   }
   const rem = 42 - first - days;
   for (let d = 1; d <= rem; d++) html += `<div class="mc-day om">${d}</div>`;
