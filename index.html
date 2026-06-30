@@ -617,12 +617,8 @@ body {
       <label class="fl">Tipo de servicio *</label>
       <select class="fs" id="fPM" onchange="updateSvcInfo()">
         <option value="">Seleccionar tipo...</option>
-        <option value="PM5">PM 5.000 km — Estándar base</option>
-        <option value="PM10">PM 10.000 km — + Diagnóstico</option>
-        <option value="PM40">PM 40.000 km — + Líquido frenos</option>
-        <option value="PM75">PM 75.000 km — + Cadena distribución</option>
-        <option value="PM80">PM 80.000 km — + Aceites transmisión/dif.</option>
-        <option value="INTER">Inter-PM 2.500 km — Filtro admisión/sílice</option>
+        <option value="PM5">PM 5.000 km</option>
+        <option value="PM10">PM 10.000 km</option>
         <option value="CORR">Correctivo — Reparación imprevista</option>
         <option value="PRED">Predictivo — Análisis de fluidos</option>
       </select>
@@ -690,23 +686,11 @@ body {
 // ── DATA ──────────────────────────────────────────────────
 const PMS = {
   PM5:  { label:'PM 5.000 km', short:'PM-5k', color:'pm1', sc:'sc-pm1', km:5000,
-    info:'Cambio de aceite + 3 filtros + muestra y presión de aceite + engrase cardán + inspección completa de todos los sistemas.',
-    tasks:['Cambio aceite motor','Reemplazo filtro aceite','Reemplazo filtro aire','Reemplazo filtro combustible','Toma muestra aceite motor','Medición presión aceite (ralentí + 3000 RPM)','Engrase crucetas cardán','Inspección frenos y embrague','Inspección dirección y suspensión','Inspección sistema eléctrico','Inspección neumáticos y carrocería','Inspección sistema refrigeración','Inspección tren de fuerza','Control de calidad'] },
+    info:'Plan Freddy Vicuña — cadencia 5.000 km. Incluye reemplazo de aceite/filtros, muestra y presión de aceite, e inspecciones generales según tabla oficial.',
+    tasks:['Aceite de motor — Reemplazar','Sello/arandela tapón cárter — Inspeccionar/Reemplazar alternado','Filtro de aceite de motor — Reemplazar','Filtro de aire — Reemplazar','Filtro de combustible — Reemplazar','Correa de servicio — Inspeccionar','Sistema de escape — Inspeccionar','Sistema de embrague (inc. líquido) — Inspeccionar','Arandela tapón de nivel — Inspeccionar/Reemplazar alternado','Carrocería — Inspeccionar','Sistema de dirección — Inspeccionar (Reemplazar cada 4 PM)','Aire acondicionado/calefacción — Inspeccionar','Sistema eléctrico — Inspeccionar','Control de calidad','Muestra de aceite de motor','Toma de presión de aceite de motor','Diagnóstico computarizado (cada 10.000 km)','Bujías originales (cada 10.000 km)','Inter-PM 1.250 km (filtro admisión + limpieza, según sílice)'] },
   PM10: { label:'PM 10.000 km', short:'PM-10k', color:'pm2', sc:'sc-pm2', km:10000,
-    info:'Todo el PM 5.000 km + diagnóstico computarizado Toyota + chequeo bujías de precalentamiento.',
-    tasks:['Todo lo de PM 5.000 km','Diagnóstico computarizado Toyota','Chequeo bujías de precalentamiento','Inspección correa de servicio'] },
-  PM40: { label:'PM 40.000 km', short:'PM-40k', color:'pm3', sc:'sc-pm3', km:40000,
-    info:'Todo el PM 10.000 km + cambio de líquido de frenos (intervalo 40.000 km).',
-    tasks:['Todo lo de PM 10.000 km','Cambio líquido de frenos','Ajuste cable freno de estacionamiento'] },
-  PM75: { label:'PM 75.000 km', short:'PM-75k', color:'pm4', sc:'sc-pm4', km:75000,
-    info:'Todo el PM 10.000 km + reemplazo de cadena de distribución (intervalo 75.000 km).',
-    tasks:['Todo lo de PM 10.000 km','Reemplazo cadena de distribución','Control sistema de distribución'] },
-  PM80: { label:'PM 80.000 km', short:'PM-80k', color:'pm5', sc:'sc-pm5', km:80000,
-    info:'Todo el PM 10.000 km + cambio de aceite transmisión, transferencia y diferenciales + refrigerante LLC + batería.',
-    tasks:['Todo lo de PM 10.000 km','Cambio aceite transmisión','Cambio aceite transferencia','Cambio aceite diferenciales','Cambio refrigerante LLC','Reemplazo batería anual'] },
-  INTER:{ label:'Inter-PM 2.500 km', short:'Inter-PM', color:'pm6', sc:'sc-pm6', km:2500,
-    info:'Servicio intermedio a los 2.500 km: limpieza del sistema de admisión y cambio de filtro por contaminación de sílice (alta montaña).',
-    tasks:['Cambio filtro admisión','Limpieza sistema de admisión','Control nivel sílice en aceite'] },
+    info:'Plan Freddy Vicuña — cadencia 10.000 km. Incluye todo el PM 5.000 + diagnóstico computarizado cada 20.000 km e inspecciones ampliadas.',
+    tasks:['Aceite de motor y filtro de aceite — Reemplazar','Filtro de aire — Reemplazar','Correa de mando — Inspeccionar','Tuberías/conexiones refrigeración y calefacción — Inspeccionar','Refrigerante de motor (Súper LLC) — Inspeccionar (1er cambio 100.000 km)','Filtro de combustible — Reemplazar','Sedimentador de agua — Inspeccionar','Línea de escape y soportes — Inspeccionar','Pedal de freno y freno de estacionamiento — Inspeccionar','Pastillas y discos de freno — Inspeccionar','Patines y tambores de freno — Inspeccionar','Líquido de frenos y embrague — Inspeccionar','Tuberías/flexibles línea de freno — Inspeccionar','Líquido dirección hidráulica — Inspeccionar','Dirección, terminales y aceite caja dirección — Inspeccionar','Reapriete pernos de cardán — Reemplazar','Engrase de cardán — Reemplazar','Guardapolvos ejes de mando/homocinética — Inspeccionar','Suspensión delantera y trasera — Inspeccionar','Pernos y tuercas de chasis y carrocería — Reemplazar','Luces, bocina y plumillas — Inspeccionar','Refrigerante A/C — Inspeccionar','Filtro de polen — Cambiar','Batería — Inspeccionar','Líquido limpiaparabrisas — Inspeccionar','Neumáticos (rotación/balanceo/alineación) — Inspeccionar','Bujías (cada 20.000 km) — Chequeo','Diagnóstico computarizado (cada 20.000 km)'] },
   CORR: { label:'Correctivo', short:'Correctivo', color:'pm7', sc:'sc-pm7', km:0,
     info:'Reparación correctiva no programada: diagnóstico de falla, reparación, registro en backlog y novedades de seguridad (ATS).',
     tasks:['Diagnóstico de falla','Reparación según diagnóstico','Registro en backlog','Novedades de seguridad (ATS)'] },
@@ -1037,50 +1021,119 @@ function renderFlota(c) {
   c.innerHTML = html;
 }
 
+let planSub = 'PM5';
+
 function renderPlan(c) {
-  const rows = [
-    ['Aceite motor', 'Cada PM — 5.000 km', 'R', 'pm4'],
-    ['Filtro aceite', 'Cada PM — 5.000 km', 'R', 'pm4'],
-    ['Filtro aire', 'Cada PM — 5.000 km', 'R', 'pm4'],
-    ['Filtro combustible', 'Cada PM — 5.000 km', 'R', 'pm4'],
-    ['Filtro admisión + limpieza sílice', 'Inter-PM — 2.500 km', 'R', 'pm6'],
-    ['Diagnóstico computarizado Toyota', '10.000 km', 'D', 'pm1'],
-    ['Líquido de frenos', '40.000 km', 'R', 'pm3'],
-    ['Cadena de distribución', '75.000 km', 'R', 'pm5'],
-    ['Aceite transmisión / transferencia / dif.', '80.000 km', 'R', 'pm5'],
-    ['Refrigerante LLC', '80.000 km', 'R', 'pm1'],
-    ['Batería', 'Anual', 'R', 'pm3'],
-    ['Correa de servicio', 'Cada PM', 'I', 'pm3'],
-    ['Sistema frenos y embrague', 'Cada PM', 'I', 'pm3'],
-    ['Dirección y suspensión', 'Cada PM', 'I', 'pm3'],
-    ['Sistema eléctrico', 'Cada PM', 'I', 'pm3'],
-    ['Neumáticos y carrocería', 'Cada PM', 'I', 'pm3'],
-    ['Engrase crucetas cardán', '5.000 km', 'E', 'pm2'],
-    ['Muestra aceite + PPM sílice', 'Cada PM', 'M', 'pm6'],
-    ['Presión aceite (ralentí + 3000 RPM)', 'Cada PM', 'M', 'pm6'],
-    ['Limpieza admisión completa', 'Condicional (Si elevado)', 'L', 'pm7'],
-    ['Cambio viscosidad aceite', 'Condicional (presión baja)', 'C', 'pm8'],
-    ['Lavado vapor condensador/radiador', 'Según necesidad', 'L', 'pm7'],
+  // Filas: [Nº, Sistema/Ítem, Frecuencia o patrón]
+  const rows5k = [
+    [1,'Aceite de motor','Reemplazar — cada PM'],
+    [2,'Sello/arandela tapón cárter','Inspeccionar / Reemplazar alternado'],
+    [3,'Filtro de aceite de motor','Reemplazar — cada PM'],
+    [4,'Filtro de aire','Reemplazar — cada PM'],
+    [5,'Bujías (originales)','Chequeo cada 10.000 km'],
+    [6,'Diagnóstico computarizado','Cada 10.000 km'],
+    [7,'Correa de servicio','Inspeccionar — cada PM'],
+    [8,'Correa o cadena de distribución','Cambiar cada 75.000 km'],
+    [9,'Sistema de escape','Inspeccionar — cada PM'],
+    [10,'Filtro de combustible','Reemplazar — cada PM'],
+    [11,'Escobillas limpiaparabrisas','Chequeo 5.000 km / a solicitud'],
+    [12,'Sistema de refrigeración','Inspeccionar 2.500 km'],
+    [13,'Cable freno de estacionamiento','Inspeccionar 2.500 km'],
+    [14,'Refrigerante motor (LLC)','Cambiar cada 80.000 km'],
+    [15,'Aceite de diferenciales','Cambiar cada 80.000 km'],
+    [16,'Sistema de frenos (inc. líquido)','Inspeccionar 2.500 km'],
+    [17,'Sistema de embrague (inc. líquido)','Inspeccionar — cada PM'],
+    [18,'Aceite de transmisión','Cambiar cada 80.000 km'],
+    [19,'Aceite de transferencia','Cambiar cada 80.000 km'],
+    [20,'Arandela tapón de nivel','Inspeccionar / Reemplazar alternado'],
+    [21,'Carrocería','Inspeccionar — cada PM'],
+    [22,'Sistema de dirección','Inspeccionar (Reemplazar cada 4º PM)'],
+    [23,'Sistema de suspensión','Inspeccionar 5.000 km'],
+    [24,'Sistema de tren de fuerza','Inspeccionar 5.000 km'],
+    [25,'Engrase de vehículo','Crucetas cardán cada 5.000 km'],
+    [26,'Aire acondicionado/calefacción','Inspeccionar — cada PM'],
+    [27,'Sistema eléctrico','Inspeccionar — cada PM'],
+    [28,'Neumáticos','Inspeccionar 5.000 km'],
+    [29,'Batería','Cambiar cada 1 año'],
+    [30,'Control de calidad','Cada 5.000 km'],
+    [31,'Muestra de aceite de motor','Cada PM + cambio fluido'],
+    [32,'Toma presión de aceite de motor','Cada PM + cambio fluido'],
+    [33,'Inter-PM 1.250 km','Filtro admisión + limpieza (según sílice)'],
+    [34,'Líquido de frenos','Cambiar cada 40.000 km'],
+    [35,'Agregado de aditivo','Si PPM sílice muy elevado'],
+    [36,'Limpieza de admisión completa','Si PPM sílice moderadamente elevado'],
+    [37,'Cambio de viscosidad de aceite','Si presión moderadamente baja'],
+    [38,'Chequeo y cambio de cinturones','Inspeccionar — cada PM'],
+    [39,'Lavado a vapor evaporador A/C','Según necesidad'],
   ];
 
+  const rows10k = [
+    [1,'Correa de mando','Inspeccionar'],
+    [2,'Aceite de motor y filtro de aceite','Reemplazar — cada PM'],
+    [3,'Filtro de aire','Reemplazar — cada PM'],
+    [4,'Tuberías/conexiones refrigeración y calefacción','Inspeccionar'],
+    [5,'Refrigerante de motor (Súper LLC)','Inspeccionar (1er cambio 100.000 km, luego c/80.000)'],
+    [6,'Filtro de combustible','Reemplazar — cada PM'],
+    [7,'Sedimentador de agua','Inspeccionar'],
+    [8,'Opacidad (humo)','Control'],
+    [9,'Tapa depósito, líneas y conexiones de combustible','Control'],
+    [10,'Línea de escape y soportes de sujeción','Inspeccionar'],
+    [11,'Pedal de freno y freno de estacionamiento','Inspeccionar'],
+    [12,'Pastillas y discos de freno','Inspeccionar'],
+    [13,'Patines y tambores de freno','Inspeccionar'],
+    [14,'Líquido de frenos y embrague','Inspeccionar'],
+    [15,'Tuberías/flexibles línea de freno','Inspeccionar'],
+    [16,'Líquido dirección hidráulica','Inspeccionar'],
+    [17,'Dirección, terminales y aceite caja dirección','Inspeccionar'],
+    [18,'Aceite transmisión manual','Según corresponda'],
+    [19,'Aceite transmisión automática (ATF T-IV / WS)','Según corresponda'],
+    [20,'Aceite caja de transferencia (4WD)','Según corresponda'],
+    [21,'Aceite diferencial frontal / trasero','Según corresponda'],
+    [22,'Reapriete pernos de cardán','Reemplazar'],
+    [23,'Engrase de cardán (crucetas/brida)','Reemplazar'],
+    [24,'Guardapolvos ejes mando/homocinética','Inspeccionar (4WD y 2WD)'],
+    [25,'Suspensión delantera y trasera','Inspeccionar'],
+    [26,'Pernos y tuercas de chasis y carrocería','Reemplazar'],
+    [27,'Luces, bocina y plumillas','Inspeccionar'],
+    [28,'Cantidad refrigerante A/C','Inspeccionar'],
+    [29,'Filtro de polen','Cambiar'],
+    [30,'Batería (carga y conexiones)','Inspeccionar'],
+    [31,'Líquido limpiaparabrisas','Inspeccionar'],
+    [32,'Neumáticos (rotación/balanceo/alineación)','Inspeccionar'],
+  ];
+
+  const data = planSub === 'PM5' ? rows5k : rows10k;
+  const titulo = planSub === 'PM5' ? 'PM 5.000 km' : 'PM 10.000 km';
+  const nota = planSub === 'PM5'
+    ? 'Uso severo: cambio cada 5.000 km. 1 hora de ralentí equivale a 70 km recorridos (alta montaña).'
+    : 'Vehículos diésel. (*) Uso severo: cambio c/5.000 km · (**) inspección c/5.000 km · (***) cambio c/20.000 km.';
+
   let html = `
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button onclick="setPlanSub('PM5')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid ${planSub==='PM5'?'var(--red)':'var(--border)'};background:${planSub==='PM5'?'var(--red)':'var(--card)'};color:${planSub==='PM5'?'#fff':'var(--text)'};font-weight:700;font-size:13px;">PM 5.000 km</button>
+      <button onclick="setPlanSub('PM10')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid ${planSub==='PM10'?'var(--red)':'var(--border)'};background:${planSub==='PM10'?'var(--red)':'var(--card)'};color:${planSub==='PM10'?'#fff':'var(--text)'};font-weight:700;font-size:13px;">PM 10.000 km</button>
+    </div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">
-      Plan Toyota Hilux — Uso extremo · Cadencia base 5.000 km<br>
-      <span style="font-size:12px;color:var(--text3);">⚡ 1 h ralentí = 70 km · Proyecto Vicuña (3.000–5.000 msnm)</span>
+      <strong style="color:var(--text);">${titulo}</strong> — Plan oficial Freddy El Taller · Proyecto Vicuña<br>
+      <span style="font-size:12px;color:var(--text3);">${nota}</span>
     </div>
     <div class="plan-card">`;
 
-  rows.forEach(([sys, int, act, col]) => {
+  data.forEach(([n, sys, freq]) => {
     html += `
       <div class="plan-row">
-        <span class="plan-sys">${sys}</span>
-        <span class="plan-int">${int}</span>
-        <span class="badge ${col}" style="font-size:10px;">${act}</span>
+        <span class="plan-sys"><span style="color:var(--text3);font-weight:600;">${n}.</span> ${sys}</span>
+        <span class="plan-int" style="text-align:right;flex-shrink:0;max-width:45%;">${freq}</span>
       </div>`;
   });
 
-  html += `<div class="plan-note">R = Reemplazar &nbsp;·&nbsp; I = Inspeccionar &nbsp;·&nbsp; D = Diagnóstico &nbsp;·&nbsp; E = Engrase &nbsp;·&nbsp; M = Muestra &nbsp;·&nbsp; L = Limpieza &nbsp;·&nbsp; C = Condicional</div></div>`;
+  html += `</div>`;
   c.innerHTML = html;
+}
+
+function setPlanSub(p) {
+  planSub = p;
+  render();
 }
 
 // ── CALENDAR ──────────────────────────────────────────────
