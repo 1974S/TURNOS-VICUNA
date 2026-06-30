@@ -10,6 +10,8 @@
 <meta name="description" content="Gestor de mantenimiento Toyota Hilux — Proyecto Vicuña">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <title>Toyota Fleet — Vicuña</title>
 <style>
 /* ─── VARIABLES ───────────────────────────── */
@@ -710,6 +712,21 @@ const PMS = {
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DOWS   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
+// ─── FIREBASE CONFIG ──────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBoTJPc0yzHPnzD_k5lTbHSX2pTtn58mPA",
+  authDomain: "turnos-vicuna.firebaseapp.com",
+  databaseURL: "https://turnos-vicuna-default-rtdb.firebaseio.com",
+  projectId: "turnos-vicuna",
+  storageBucket: "turnos-vicuna.firebasestorage.app",
+  messagingSenderId: "782992037492",
+  appId: "1:782992037492:web:b1a862de5ef5efd7342321"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const refTurnos = db.ref('turnos');
+
 function loadEvents() {
   try {
     const raw = localStorage.getItem('tf_vicuna_v1');
@@ -717,6 +734,20 @@ function loadEvents() {
   } catch(e) {}
   return [];
 }
+
+// Escuchar cambios en Firebase en tiempo real
+refTurnos.on('value', snap => {
+  const data = snap.val();
+  if (data) {
+    events = Object.values(data).sort((a,b) => a.id - b.id);
+    nid = Math.max(0, ...events.map(e => e.id)) + 1;
+  } else {
+    events = [];
+    nid = 1;
+  }
+  try { localStorage.setItem('tf_vicuna_v1', JSON.stringify(events)); } catch(e) {}
+  render();
+});
 
 // ─── FLOTA VICUÑA ─────────────────────────────────────────────────────────
 const FLOTA_VICUNA = [
@@ -813,6 +844,14 @@ let srch   = '';
 
 function saveLS() {
   try { localStorage.setItem('tf_vicuna_v1', JSON.stringify(events)); } catch(e) {}
+}
+
+function saveFirebase(ev) {
+  refTurnos.child(String(ev.id)).set(ev);
+}
+
+function deleteFirebase(id) {
+  refTurnos.child(String(id)).remove();
 }
 const TODAY    = new Date();
 const NOW_DAY  = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
@@ -1180,6 +1219,7 @@ function saveEv() {
 
   events.push(ev);
   saveLS();
+  saveFirebase(ev);
   closeAdd();
   render();
 }
@@ -1248,6 +1288,7 @@ function closeDet() {
 function delEv() {
   if (!selId) return;
   if (!confirm('¿Eliminar este turno?')) return;
+  deleteFirebase(selId);
   events = events.filter(e => e.id !== selId);
   saveLS();
   closeDet();
