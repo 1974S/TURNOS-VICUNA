@@ -807,14 +807,14 @@ function onDomInput(val) {
 let events = loadEvents();
 let nid = Math.max(0, ...events.map(e => e.id)) + 1;
 let curTab = 'inicio';
-let vDate  = new Date(2026, 4, 1);
+let vDate  = new Date(); vDate = new Date(vDate.getFullYear(), vDate.getMonth(), 1);
 let selId  = null;
 let srch   = '';
 
 function saveLS() {
   try { localStorage.setItem('tf_vicuna_v1', JSON.stringify(events)); } catch(e) {}
 }
-const TODAY    = new Date(2026, 4, 12);
+const TODAY    = new Date();
 const NOW_DAY  = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
 const fmtKm    = n  => n.toLocaleString('es-AR') + ' km';
 const fmtDate  = s  => { const d = new Date(s+'T12:00:00'); return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0,3)} ${d.getFullYear()}`; };
@@ -898,8 +898,9 @@ function renderTurnos(c) {
   let html = `
     <div class="searchbar">
       <span class="searchbar-icon">🔍</span>
-      <input placeholder="Buscar patente, área, técnico..." value="${srch}" oninput="srch=this.value;renderTurnos(document.getElementById('content'))">`
-    </div>`;
+      <input placeholder="Buscar patente, área, técnico..." value="${srch}" oninput="srch=this.value;renderTurnos(document.getElementById('content'))">
+    </div>
+    `;
 
   if (!list.length) {
     html += `<div class="empty"><div class="empty-icon">🔎</div><div class="empty-txt">Sin resultados</div></div>`;
@@ -913,8 +914,6 @@ function renderTurnos(c) {
   bindCards(c);
 }
 
-  bindCards(c);
-}
 
 function renderFlota(c) {
   const busq = (document.getElementById('flotaBusq') || {value:''}).value || '';
@@ -970,7 +969,7 @@ function renderFlota(c) {
   c.innerHTML = html;
 }
 
-
+function renderPlan(c) {
   const rows = [
     ['Aceite motor', 'Cada PM — 5.000 km', 'R', 'pm4'],
     ['Filtro aceite', 'Cada PM — 5.000 km', 'R', 'pm4'],
